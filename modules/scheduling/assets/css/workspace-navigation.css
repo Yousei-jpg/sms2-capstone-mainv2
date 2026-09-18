@@ -1,0 +1,234 @@
+/* Scheduling workspace navigation
+ *
+ * Scheduling pages used to expose their actions as numbered, linear wizards.
+ * The original navigation remains in the DOM as the page controller, but is
+ * visually replaced by the direct-access workspace toolbar below. This keeps
+ * each subsystem's existing validation and save logic intact.
+ */
+.scheduling-wizard-removed {
+    display: none !important;
+}
+
+.scheduling-workspace-bar {
+    position: sticky;
+    top: 72px;
+    z-index: 1015;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: .9rem 0 1rem;
+    padding: .7rem;
+    border: 1px solid var(--sms-border, #dbe5f1);
+    border-radius: 14px;
+    background: var(--sms-surface, #fff);
+    background: color-mix(in srgb, var(--sms-surface, #fff) 96%, transparent);
+    box-shadow: 0 8px 24px rgba(21, 54, 91, .08);
+    backdrop-filter: blur(14px);
+}
+
+.scheduling-workspace-home {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 0;
+}
+
+.scheduling-workspace-home > i {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    border-radius: 11px;
+    background: var(--sms-primary-xlight, #e8f2ff);
+    color: var(--sms-primary, #0d6efd);
+    font-size: 1.15rem;
+}
+
+.scheduling-workspace-home strong,
+.scheduling-workspace-home small {
+    display: block;
+}
+
+.scheduling-workspace-home strong {
+    color: var(--sms-heading, #102f56);
+    font-size: .84rem;
+}
+
+.scheduling-workspace-home small {
+    color: var(--sms-text-muted, #708096);
+    font-size: .69rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 310px;
+}
+
+.scheduling-workspace-actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.scheduling-workspace-menu {
+    position: relative;
+}
+
+.scheduling-workspace-menu > summary {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    min-height: 40px;
+    padding: .55rem .75rem;
+    border: 1px solid #cfdceb;
+    border-radius: 10px;
+    background: var(--sms-surface, #fff);
+    color: var(--sms-heading, #193a62);
+    cursor: pointer;
+    font-size: .76rem;
+    font-weight: 750;
+    user-select: none;
+}
+
+.scheduling-workspace-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.scheduling-workspace-menu[open] > summary,
+.scheduling-workspace-menu > summary:hover {
+    border-color: #78ace9;
+    background: #f3f8ff;
+    color: #075dbd;
+}
+
+.scheduling-workspace-popover {
+    position: absolute;
+    top: calc(100% + .45rem);
+    right: 0;
+    width: min(360px, calc(100vw - 2rem));
+    max-height: min(520px, 70vh);
+    overflow: auto;
+    padding: .55rem;
+    border: 1px solid var(--sms-border, #dbe5f1);
+    border-radius: 13px;
+    background: var(--sms-surface, #fff);
+    box-shadow: 0 18px 45px rgba(10, 35, 69, .2);
+}
+
+.scheduling-workspace-popover-title {
+    padding: .45rem .55rem .6rem;
+    color: var(--sms-text-muted, #748399);
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.scheduling-workspace-item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .6rem;
+    padding: .6rem;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--sms-heading, #18395f);
+    text-align: left;
+    text-decoration: none;
+}
+
+.scheduling-workspace-item:hover,
+.scheduling-workspace-item.is-active {
+    background: #edf5ff;
+    color: #075dbd;
+}
+
+.scheduling-workspace-item:disabled,
+.scheduling-workspace-item.is-locked {
+    opacity: .48;
+    cursor: not-allowed;
+}
+
+.scheduling-workspace-item > i:first-child {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: #e8f1fc;
+    color: #1766bd;
+    font-size: 1rem;
+}
+
+.scheduling-workspace-item span {
+    min-width: 0;
+}
+
+.scheduling-workspace-item strong,
+.scheduling-workspace-item small {
+    display: block;
+}
+
+.scheduling-workspace-item strong {
+    font-size: .76rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scheduling-workspace-item small {
+    margin-top: .08rem;
+    color: var(--sms-text-muted, #748399);
+    font-size: .65rem;
+}
+
+.scheduling-workspace-item .ti-chevron-right,
+.scheduling-workspace-item .ti-lock {
+    color: #93a2b6;
+    font-size: .9rem;
+}
+
+/* Remove numbered page ornaments left over from the former wizard layout. */
+.tsm-page-title > span,
+.rac-page-title > span,
+.sat-page-title > span,
+.scheduling-step-badge {
+    display: none !important;
+}
+
+@media (max-width: 767.98px) {
+    .scheduling-workspace-bar {
+        position: static;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scheduling-workspace-actions,
+    .scheduling-workspace-menu,
+    .scheduling-workspace-menu > summary {
+        width: 100%;
+    }
+
+    .scheduling-workspace-menu > summary {
+        justify-content: center;
+    }
+
+    .scheduling-workspace-popover {
+        position: static;
+        width: 100%;
+        margin-top: .45rem;
+        box-shadow: none;
+    }
+}
+
+@media print {
+    .scheduling-workspace-bar {
+        display: none !important;
+    }
+}

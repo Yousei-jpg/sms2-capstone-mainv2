@@ -1,0 +1,875 @@
+/* ==========================================================================
+   SMS 2 - Enrollment Module
+   Scoped styles for the Online Pre-Registration screens.
+
+   Every colour, radius, and shadow comes from assets/css/theme.css. No new
+   palette is introduced, so the module inherits dark mode and any future
+   theme change automatically.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Workflow step strip
+   -------------------------------------------------------------------------- */
+.enr-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.enr-step {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .85rem;
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius);
+    background: var(--sms-surface);
+    color: var(--sms-text-muted);
+    font-size: .82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+
+a.enr-step:hover {
+    border-color: var(--sms-primary-light);
+    box-shadow: var(--sms-shadow-xs);
+    color: var(--sms-primary);
+}
+
+.enr-step-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--sms-surface-muted);
+    color: var(--sms-text-muted);
+    font-size: .72rem;
+    font-weight: 700;
+    flex: 0 0 auto;
+}
+
+.enr-step.is-done {
+    border-color: var(--sms-border);
+    color: var(--sms-text);
+}
+
+.enr-step.is-done .enr-step-no {
+    background: var(--sms-success);
+    color: #fff;
+}
+
+.enr-step.is-current {
+    border-color: var(--sms-primary);
+    background: var(--sms-primary-xlight);
+    color: var(--sms-primary-dark);
+    font-weight: 600;
+}
+
+.enr-step.is-current .enr-step-no {
+    background: var(--sms-primary);
+    color: #fff;
+}
+
+.enr-step.is-locked {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .enr-step-label { display: none; }
+    .enr-step { padding: .45rem .55rem; }
+}
+
+/* --------------------------------------------------------------------------
+   Read-only applicant fields
+   The Registrar must be able to tell submitted data from editable data.
+   -------------------------------------------------------------------------- */
+.enr-readonly {
+    padding: .5rem .75rem;
+    min-height: 2.4rem;
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface-muted);
+    color: var(--sms-text-strong);
+    font-size: .9rem;
+    word-break: break-word;
+}
+
+.enr-readonly.is-empty {
+    color: var(--sms-text-faint);
+    font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Applicant header card
+   -------------------------------------------------------------------------- */
+.enr-applicant-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.enr-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--sms-primary-xlight);
+    color: var(--sms-primary-dark);
+    font-weight: 700;
+    font-size: 1rem;
+    flex: 0 0 auto;
+}
+
+.enr-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: .75rem 1.5rem;
+}
+
+.enr-meta-grid dt {
+    font-size: .72rem;
+    font-weight: 500;
+    color: var(--sms-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .15rem;
+}
+
+.enr-meta-grid dd {
+    margin: 0;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--sms-text-strong);
+}
+
+/* --------------------------------------------------------------------------
+   Validation checklist
+   -------------------------------------------------------------------------- */
+.enr-rule {
+    display: flex;
+    gap: .75rem;
+    padding: .75rem .9rem;
+    border: 1px solid var(--sms-border);
+    border-left-width: 3px;
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface);
+    margin-bottom: .5rem;
+}
+
+.enr-rule-pass    { border-left-color: var(--sms-success); }
+.enr-rule-warning { border-left-color: var(--sms-warning); }
+.enr-rule-fail    { border-left-color: var(--sms-danger); }
+
+.enr-rule-icon {
+    flex: 0 0 auto;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.enr-rule-pass    .enr-rule-icon { color: var(--sms-success); }
+.enr-rule-warning .enr-rule-icon { color: var(--sms-warning); }
+.enr-rule-fail    .enr-rule-icon { color: var(--sms-danger); }
+
+.enr-rule-label {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--sms-text-strong);
+    margin-bottom: .1rem;
+}
+
+.enr-rule-message {
+    font-size: .82rem;
+    color: var(--sms-text-muted);
+    line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Decision panel
+   -------------------------------------------------------------------------- */
+.enr-decision-option {
+    display: flex;
+    gap: .65rem;
+    align-items: flex-start;
+    padding: .7rem .85rem;
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface);
+    margin-bottom: .5rem;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.enr-decision-option:hover { border-color: var(--sms-primary-light); }
+
+.enr-decision-option input[type="radio"] { margin-top: .2rem; }
+
+.enr-decision-option.is-disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    background: var(--sms-surface-muted);
+}
+
+.enr-decision-title {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--sms-text-strong);
+}
+
+.enr-decision-hint {
+    font-size: .78rem;
+    color: var(--sms-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Processed result
+   -------------------------------------------------------------------------- */
+.enr-result-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 50%;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.enr-result-approved  { background: rgba(22,163,74,.12);  color: var(--sms-success); }
+.enr-result-correction{ background: rgba(217,119,6,.12);  color: var(--sms-warning); }
+.enr-result-rejected  { background: rgba(220,38,38,.12);  color: var(--sms-danger); }
+
+.enr-next-step {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .6rem 0;
+}
+
+.enr-next-step-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--sms-primary);
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 700;
+    flex: 0 0 auto;
+}
+
+.enr-next-step.is-blocked .enr-next-step-no {
+    background: var(--sms-text-faint);
+}
+
+/* --------------------------------------------------------------------------
+   Filter bar
+   -------------------------------------------------------------------------- */
+.enr-filter-card .form-label {
+    font-size: .75rem;
+    font-weight: 500;
+    color: var(--sms-text-muted);
+    margin-bottom: .25rem;
+}
+
+.enr-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin-bottom: 1rem;
+}
+
+.enr-tab {
+    padding: .4rem .85rem;
+    border: 1px solid var(--sms-border);
+    border-radius: 999px;
+    background: var(--sms-surface);
+    color: var(--sms-text-muted);
+    font-size: .82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all .15s ease;
+}
+
+.enr-tab:hover {
+    border-color: var(--sms-primary-light);
+    color: var(--sms-primary);
+}
+
+.enr-tab.is-active {
+    border-color: var(--sms-primary);
+    background: var(--sms-primary);
+    color: #fff;
+}
+
+.enr-tab-count {
+    display: inline-block;
+    margin-left: .3rem;
+    padding: 0 .35rem;
+    border-radius: 999px;
+    background: var(--sms-surface-muted);
+    color: var(--sms-text-muted);
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.enr-tab.is-active .enr-tab-count {
+    background: rgba(255,255,255,.25);
+    color: #fff;
+}
+
+/* --------------------------------------------------------------------------
+   Stat cards as links
+   -------------------------------------------------------------------------- */
+a.mpl-stat { transition: box-shadow .15s ease, transform .15s ease; }
+a.mpl-stat:hover { box-shadow: var(--sms-shadow-sm); transform: translateY(-1px); }
+
+/* ==========================================================================
+   INTERACTIVE LAYER
+   Added for richer feedback: coloured action buttons, hover/press/focus
+   states, animated status pills, and card entrances.
+
+   Every colour below resolves to a --sms-* token from assets/css/theme.css.
+   No new hex values are introduced, so light mode, dark mode, and any future
+   theme change flow through automatically.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Action buttons
+   Semantic tones so an action's colour matches its consequence:
+   approve = success, return = warning, reject = danger.
+   -------------------------------------------------------------------------- */
+.enr-btn {
+    --enr-btn-bg: var(--sms-primary);
+    --enr-btn-fg: #fff;
+    --enr-btn-ring: var(--sms-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .55rem 1.05rem;
+    border: 1px solid transparent;
+    border-radius: var(--sms-radius-sm);
+    background: var(--enr-btn-bg);
+    color: var(--enr-btn-fg);
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease,
+                background-color .16s ease, border-color .16s ease;
+}
+
+.enr-btn .ti {
+    font-size: 1.05em;
+    flex-shrink: 0;
+}
+
+.enr-btn:hover {
+    color: var(--enr-btn-fg);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--enr-btn-ring) 34%, transparent);
+    filter: brightness(1.06);
+}
+
+/* Press feedback: the button settles back down under the cursor. */
+.enr-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+    filter: brightness(.95);
+}
+
+/* Keyboard focus stays visible even though the mouse focus ring is removed. */
+.enr-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--enr-btn-ring) 35%, transparent);
+}
+
+.enr-btn:disabled,
+.enr-btn.is-disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    filter: none;
+}
+
+.enr-btn-success { --enr-btn-bg: var(--sms-success); --enr-btn-ring: var(--sms-success); }
+.enr-btn-warning { --enr-btn-bg: var(--sms-warning); --enr-btn-ring: var(--sms-warning); }
+.enr-btn-danger  { --enr-btn-bg: var(--sms-danger);  --enr-btn-ring: var(--sms-danger); }
+.enr-btn-info    { --enr-btn-bg: var(--sms-info);    --enr-btn-ring: var(--sms-info); }
+
+/* Quiet variant for secondary actions like Back and Reset. */
+.enr-btn-ghost {
+    --enr-btn-bg: transparent;
+    --enr-btn-fg: var(--sms-text);
+    --enr-btn-ring: var(--sms-primary);
+    border-color: var(--sms-border);
+}
+
+.enr-btn-ghost:hover {
+    background: var(--sms-surface-muted);
+    border-color: var(--sms-primary-light);
+    color: var(--sms-primary);
+    filter: none;
+}
+
+/* Tinted variant: carries the tone without the visual weight of a solid fill. */
+.enr-btn-soft {
+    --enr-btn-fg: var(--sms-primary);
+    background: color-mix(in srgb, var(--sms-primary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--sms-primary) 24%, transparent);
+}
+
+.enr-btn-soft:hover {
+    background: color-mix(in srgb, var(--sms-primary) 20%, transparent);
+    color: var(--sms-primary);
+    filter: none;
+}
+
+.enr-btn-sm { padding: .38rem .75rem; font-size: .8125rem; }
+.enr-btn-lg { padding: .7rem 1.4rem; font-size: .9375rem; }
+
+/* Busy state for submits, so a slow decision write cannot be double-clicked. */
+.enr-btn.is-busy {
+    pointer-events: none;
+    opacity: .75;
+}
+
+.enr-btn.is-busy::before {
+    content: "";
+    width: .9em;
+    height: .9em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: enr-spin .6s linear infinite;
+}
+
+@keyframes enr-spin { to { transform: rotate(360deg); } }
+
+/* --------------------------------------------------------------------------
+   2. Summary cards - clickable, so they should behave like it
+   -------------------------------------------------------------------------- */
+.mpl-stat {
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+/* Accent bar wipes in on hover to signal the card is a link. */
+.mpl-stat::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 100%;
+    background: var(--sms-primary);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .22s ease;
+}
+
+.mpl-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sms-shadow-md);
+    border-color: color-mix(in srgb, var(--sms-primary) 30%, var(--sms-border));
+}
+
+.mpl-stat:hover::after { transform: scaleX(1); }
+
+.mpl-stat:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sms-primary) 32%, transparent);
+}
+
+.mpl-stat:hover .mpl-stat-icon { transform: scale(1.08) rotate(-4deg); }
+
+.mpl-stat-icon { transition: transform .22s ease; }
+
+/* Tone the accent bar to match the card's own icon colour. */
+.mpl-stat:has(.mpl-stat-icon.amber)::after  { background: var(--sms-warning); }
+.mpl-stat:has(.mpl-stat-icon.green)::after  { background: var(--sms-success); }
+.mpl-stat:has(.mpl-stat-icon.purple)::after { background: var(--sms-info); }
+
+/* --------------------------------------------------------------------------
+   3. Status pills - a coloured dot makes state readable at a glance
+   -------------------------------------------------------------------------- */
+.mpl-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.mpl-status::before {
+    content: "";
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+/* Anything awaiting a person pulses gently so the queue reads as live. */
+.mpl-status.pending::before {
+    animation: enr-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes enr-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .45; transform: scale(.82); }
+}
+
+/* --------------------------------------------------------------------------
+   4. Table rows
+   -------------------------------------------------------------------------- */
+.mpl-table tbody tr {
+    transition: background-color .15s ease, box-shadow .15s ease;
+}
+
+.mpl-table tbody tr:hover {
+    background: color-mix(in srgb, var(--sms-primary) 5%, transparent);
+    box-shadow: inset 3px 0 0 var(--sms-primary);
+}
+
+.mpl-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: var(--sms-radius-sm);
+    transition: background-color .15s ease, color .15s ease, transform .15s ease;
+}
+
+.mpl-actions a:hover {
+    background: color-mix(in srgb, var(--sms-primary) 14%, transparent);
+    color: var(--sms-primary);
+    transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   5. Workflow stepper - connector line plus clearer state colours
+   -------------------------------------------------------------------------- */
+.enr-steps { position: relative; }
+
+.enr-step {
+    position: relative;
+    transition: transform .18s ease, border-color .18s ease, background-color .18s ease;
+}
+
+.enr-step.is-done .enr-step-no,
+.enr-step.is-current .enr-step-no {
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.enr-step.is-current {
+    border-color: color-mix(in srgb, var(--sms-primary) 45%, transparent);
+    background: color-mix(in srgb, var(--sms-primary) 8%, transparent);
+}
+
+.enr-step.is-current .enr-step-no {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--sms-primary) 20%, transparent);
+}
+
+a.enr-step:hover {
+    transform: translateY(-1px);
+    border-color: var(--sms-primary-light);
+}
+
+/* --------------------------------------------------------------------------
+   6. Validation rules - tint the whole row by outcome, not just the border
+   -------------------------------------------------------------------------- */
+.enr-rule {
+    transition: background-color .16s ease, transform .16s ease;
+}
+
+.enr-rule:hover { transform: translateX(2px); }
+
+.enr-rule-pass    { background: color-mix(in srgb, var(--sms-success) 6%, transparent); }
+.enr-rule-warning { background: color-mix(in srgb, var(--sms-warning) 8%, transparent); }
+.enr-rule-fail    { background: color-mix(in srgb, var(--sms-danger)  8%, transparent); }
+
+.enr-rule-icon { transition: transform .16s ease; }
+.enr-rule:hover .enr-rule-icon { transform: scale(1.12); }
+
+/* A failing rule is the reason approval is blocked, so it gets emphasis. */
+.enr-rule-fail .enr-rule-label { color: var(--sms-danger); }
+
+/* --------------------------------------------------------------------------
+   7. Decision options - selecting one colours the whole card
+   -------------------------------------------------------------------------- */
+.enr-decision-option {
+    transition: border-color .16s ease, background-color .16s ease,
+                box-shadow .16s ease, transform .16s ease;
+}
+
+.enr-decision-option:not(.is-disabled):hover { transform: translateY(-1px); }
+
+.enr-decision-option:has(input:checked) {
+    box-shadow: var(--sms-shadow-sm);
+}
+
+.enr-decision-option:has(.enr-decision-title.text-success input:checked),
+.enr-decision-option:has(input[value="approve"]:checked) {
+    border-color: var(--sms-success);
+    background: color-mix(in srgb, var(--sms-success) 9%, transparent);
+}
+
+.enr-decision-option:has(input[value="return"]:checked),
+.enr-decision-option:has(input[value="correction"]:checked) {
+    border-color: var(--sms-warning);
+    background: color-mix(in srgb, var(--sms-warning) 9%, transparent);
+}
+
+.enr-decision-option:has(input[value="reject"]:checked) {
+    border-color: var(--sms-danger);
+    background: color-mix(in srgb, var(--sms-danger) 9%, transparent);
+}
+
+.enr-decision-option:focus-within {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sms-primary) 22%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   8. Tabs
+   -------------------------------------------------------------------------- */
+.enr-tab {
+    position: relative;
+    transition: color .16s ease, background-color .16s ease, transform .16s ease;
+}
+
+.enr-tab:hover { transform: translateY(-1px); }
+
+.enr-tab .ti { margin-right: .35rem; opacity: .8; }
+
+.enr-tab-count { transition: background-color .16s ease, color .16s ease; }
+
+/* --------------------------------------------------------------------------
+   9. Entrance animation
+   Cards fade up in sequence so the screen assembles rather than snapping in.
+   -------------------------------------------------------------------------- */
+@keyframes enr-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.enr-animate > * {
+    animation: enr-rise .38s ease both;
+}
+
+.enr-animate > *:nth-child(1) { animation-delay: .02s; }
+.enr-animate > *:nth-child(2) { animation-delay: .06s; }
+.enr-animate > *:nth-child(3) { animation-delay: .10s; }
+.enr-animate > *:nth-child(4) { animation-delay: .14s; }
+.enr-animate > *:nth-child(5) { animation-delay: .18s; }
+
+/* --------------------------------------------------------------------------
+   10. Motion preferences
+   Anyone who has asked their OS to reduce motion gets the colour feedback
+   without the movement. This is a requirement, not a nicety.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .enr-btn,
+    .mpl-stat,
+    .mpl-stat-icon,
+    .enr-rule,
+    .enr-step,
+    .enr-tab,
+    .enr-decision-option,
+    .mpl-actions a,
+    .mpl-table tbody tr {
+        transition: none;
+    }
+
+    .enr-animate > *,
+    .mpl-status.pending::before,
+    .enr-btn.is-busy::before {
+        animation: none;
+    }
+
+    .enr-btn:hover,
+    .mpl-stat:hover,
+    .enr-rule:hover,
+    .enr-tab:hover,
+    .mpl-actions a:hover,
+    .enr-decision-option:not(.is-disabled):hover {
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   DOCUMENT UPLOAD PORTAL
+   Same token set as everything above; no new colour values.
+   ========================================================================== */
+
+.enr-doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.enr-doc-row {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr auto auto;
+    align-items: center;
+    gap: .85rem;
+    padding: .7rem .85rem;
+    border: 1px solid var(--sms-border);
+    border-left: 3px solid var(--sms-border);
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface);
+    transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+}
+
+.enr-doc-row:hover {
+    transform: translateX(2px);
+    border-color: color-mix(in srgb, var(--sms-primary) 30%, var(--sms-border));
+}
+
+.enr-doc-row-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    font-size: 1.05rem;
+}
+
+.enr-doc-row-action {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+}
+
+/* Outcome colouring, so the checklist is readable without reading it. */
+.enr-doc-verified {
+    border-left-color: var(--sms-success);
+    background: color-mix(in srgb, var(--sms-success) 5%, var(--sms-surface));
+}
+.enr-doc-verified .enr-doc-row-icon {
+    color: var(--sms-success);
+    background: color-mix(in srgb, var(--sms-success) 12%, transparent);
+}
+
+.enr-doc-for-verification {
+    border-left-color: var(--sms-warning);
+    background: color-mix(in srgb, var(--sms-warning) 5%, var(--sms-surface));
+}
+.enr-doc-for-verification .enr-doc-row-icon {
+    color: var(--sms-warning);
+    background: color-mix(in srgb, var(--sms-warning) 12%, transparent);
+}
+
+.enr-doc-needs-replacement {
+    border-left-color: var(--sms-info);
+    background: color-mix(in srgb, var(--sms-info) 6%, var(--sms-surface));
+}
+.enr-doc-needs-replacement .enr-doc-row-icon {
+    color: var(--sms-info);
+    background: color-mix(in srgb, var(--sms-info) 12%, transparent);
+}
+
+.enr-doc-rejected {
+    border-left-color: var(--sms-danger);
+    background: color-mix(in srgb, var(--sms-danger) 6%, var(--sms-surface));
+}
+.enr-doc-rejected .enr-doc-row-icon {
+    color: var(--sms-danger);
+    background: color-mix(in srgb, var(--sms-danger) 12%, transparent);
+}
+
+/* Missing is deliberately muted rather than alarming: nothing has gone wrong,
+   the applicant simply has not sent it yet. */
+.enr-doc-missing {
+    border-left-color: var(--sms-border);
+    background: var(--sms-surface-muted);
+}
+.enr-doc-missing .enr-doc-row-icon {
+    color: var(--sms-text-faint);
+    background: color-mix(in srgb, var(--sms-text-faint) 12%, transparent);
+}
+.enr-doc-missing .enr-doc-row-main { opacity: .75; }
+
+@media (max-width: 720px) {
+    .enr-doc-row {
+        grid-template-columns: 2.25rem 1fr;
+        row-gap: .5rem;
+    }
+    .enr-doc-row-status,
+    .enr-doc-row-action { grid-column: 2; }
+}
+
+/* --------------------------------------------------------------------------
+   Document preview
+   -------------------------------------------------------------------------- */
+.enr-doc-preview {
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface-muted);
+    overflow: hidden;
+    min-height: 18rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.enr-doc-preview img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.enr-doc-preview object {
+    width: 100%;
+    height: 26rem;
+    border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   OCR output
+   -------------------------------------------------------------------------- */
+.enr-ocr-text {
+    max-height: 14rem;
+    overflow: auto;
+    padding: .7rem .85rem;
+    border: 1px solid var(--sms-border);
+    border-radius: var(--sms-radius-sm);
+    background: var(--sms-surface-muted);
+    color: var(--sms-text);
+    font-size: .78rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Completeness bar
+   -------------------------------------------------------------------------- */
+.enr-doc-progress .progress {
+    background: var(--sms-surface-muted);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.enr-doc-progress .progress-bar {
+    transition: width .5s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .enr-doc-row,
+    .enr-doc-progress .progress-bar { transition: none; }
+    .enr-doc-row:hover { transform: none; }
+}
