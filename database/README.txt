@@ -55,6 +55,10 @@ Useful options:
 
 Docker startup option:
   Set SMS2_RUN_MIGRATIONS=1 to run database/migrate.php before Apache starts.
+  The Docker image also sets SMS2_SEED_DEMO=1, so the first migration loads the
+  Class Schedule demo data (database/demo-scheduling-seed*.sql). Set
+  SMS2_SEED_DEMO=0 in the host's environment variables to skip it.
+  /up.php?db=1 reports demo=loaded, partial or none.
 
 InfinityFree (free hosting)
 ---------------------------

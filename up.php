@@ -24,4 +24,16 @@ try {
     echo "\ndb=ok schema=ready";
 } catch (Throwable $e) {
     echo "\ndb=ok schema=missing";
+    exit;
 }
+
+// Runtime logs are not available on the host, so report whether the demo seed ran.
+try {
+    $seeded = (int) $pdo->query(
+        "SELECT COUNT(*) FROM `schema_migrations`
+         WHERE `migration_key` IN ('2026_09_27_demo_scheduling_seed', '2026_09_27_demo_scheduling_seed_extra')"
+    )->fetchColumn();
+} catch (Throwable $e) {
+    $seeded = 0;
+}
+echo ' demo=' . ($seeded === 2 ? 'loaded' : ($seeded === 1 ? 'partial' : 'none'));

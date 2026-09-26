@@ -21,6 +21,8 @@ RUN test -f /var/www/html/index.php \
     && test -f /var/www/html/modules/crad/index.php
 
 ENV PORT=8000
+# The first migration also loads the Class Schedule demo data; set SMS2_SEED_DEMO=0 on the host to skip it.
+ENV SMS2_SEED_DEMO=1
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
