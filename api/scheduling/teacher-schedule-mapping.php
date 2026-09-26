@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/config.php';
 require_once ROOT_PATH . '/config/database.php';
 require_once ROOT_PATH . '/includes/authentication.php';
+require_once ROOT_PATH . '/modules/scheduling/teacher-mapping-service.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -59,12 +60,15 @@ try {
     }
 
     $sectionCode = trim((string)($_GET['section_code'] ?? ''));
+    $sectionId = (int)($_GET['section_id'] ?? 0);
+    $sectionWhere = $sectionId > 0 ? 'id = :selected' : 'code = :selected';
+    $sectionParams = ['selected' => $sectionId > 0 ? $sectionId : $sectionCode];
     $selectedTerm = null;
-    if ($sectionCode !== '') {
+    if ($sectionCode !== '' || $sectionId > 0) {
         $termStmt = $pdo->prepare(
-            'SELECT academic_year, semester FROM sections WHERE code = :code LIMIT 1'
+            "SELECT academic_year, semester FROM sections WHERE $sectionWhere LIMIT 1"
         );
-        $termStmt->execute(['code' => $sectionCode]);
+        $termStmt->execute($sectionParams);
         $selectedTerm = $termStmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
@@ -161,6 +165,11 @@ try {
 
     foreach ($teachers as &$teacher) {
         $teacher['qualifications'] = $qualificationsByTeacher[(int)$teacher['id']] ?? [];
+        $teacher['photo_url']=null;
+        foreach(['jpg','jpeg','png','webp'] as $extension){
+            $relative='/images/faculty/'.(int)$teacher['id'].'.'.$extension;
+            if(is_file(ROOT_PATH.$relative)){$teacher['photo_url']=BASE_URL.$relative;break;}
+        }
     }
     unset($teacher);
 
@@ -239,8 +248,16 @@ try {
         'schedule_entries' => $scheduleEntries,
         'qualification_configured' => $qualificationConfigured,
     ];
+    $allRecords=ccRecords($pdo);
+    $response['availability_records']=array_values(array_map('ccPublicRecord',array_filter($allRecords,fn($r)=>!$selectedTerm||ccSameTerm($r,$selectedTerm))));
+    $response['teacher_availability']=$pdo->query('SELECT teacher_id,day_of_week,start_time,end_time,availability,academic_year,semester FROM teacher_availability')->fetchAll(PDO::FETCH_ASSOC);
+    foreach($response['teachers'] as &$t){
+        $t['current_load_units']=0;
+        foreach($allRecords as $r)if((int)$r['teacher_id']===(int)$t['id']&&(!$selectedTerm||ccSameTerm($r,$selectedTerm)))$t['current_load_units']+=$r['units'];
+    }
+    unset($t);
 
-    if ($sectionCode !== '') {
+    if ($sectionCode !== '' || $sectionId > 0) {
         $sectionStmt = $pdo->prepare("
             SELECT
                 s.id,
@@ -255,10 +272,10 @@ try {
                 s.advisor_name,
                 s.status
             FROM sections s
-            WHERE s.code = :code
+            WHERE $sectionWhere
             LIMIT 1
         ");
-        $sectionStmt->execute(['code' => $sectionCode]);
+        $sectionStmt->execute($sectionParams);
         $section = $sectionStmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$section) {
@@ -321,6 +338,11 @@ try {
         $response['section'] = $section;
         $response['assigned_subjects'] = $assignedSubjects;
         $response['section_schedule'] = $sectionSchedules;
+        $st=$pdo->prepare("SELECT * FROM schedule_entries WHERE section_id=? AND status<>'Cancelled'");
+        $st->execute([$section['id']]);$revisions=[];
+        foreach($st->fetchAll(PDO::FETCH_ASSOC) as $entry)$revisions[(int)$entry['id']]=tmRevision($entry);
+        foreach($response['section_schedule'] as &$entry)$entry['revision']=$revisions[(int)$entry['id']]??'';
+        unset($entry);
     }
 
     echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

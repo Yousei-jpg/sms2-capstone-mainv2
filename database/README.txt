@@ -29,6 +29,10 @@ For web/database deployment, run both SQL dumps with:
 
 This runner calls:
   - database/sms2_db.sql
+  - database/scheduling-v2-schema.sql
+  - database/room-availability-workflow.sql
+  - database/time-block-generator-workflow.sql
+  - database/calendar-integration-workflow.sql
   - modules/crad/database/crad_db.sql
 
 HostForge:

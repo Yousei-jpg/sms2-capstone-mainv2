@@ -276,6 +276,50 @@ function sms2RunMigrations(array $options = []): array
             'sql_file' => __DIR__ . '/sms2_db.sql',
         ],
         [
+            'label' => 'SMS2 scheduling v2 schema',
+            'migration_key' => '2026_08_19_sms2_scheduling_v2_schema',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/scheduling-v2-schema.sql',
+        ],
+        [
+            'label' => 'SMS2 room availability workflow',
+            'migration_key' => '2026_09_26_sms2_room_availability_workflow',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/room-availability-workflow.sql',
+        ],
+        [
+            'label' => 'SMS2 time block generator workflow',
+            'migration_key' => '2026_09_26_sms2_time_block_generator_workflow',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/time-block-generator-workflow.sql',
+        ],
+        [
+            'label' => 'SMS2 calendar integration workflow',
+            'migration_key' => '2026_09_26_sms2_calendar_integration_workflow',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/calendar-integration-workflow.sql',
+        ],
+        [
             'label' => 'CRAD module database',
             'migration_key' => '2026_08_28_crad_db_dump',
             'host' => CRAD_DB_HOST,
@@ -296,8 +340,19 @@ function sms2RunMigrations(array $options = []): array
     }
 
     sms2MigrateOut('SMS 2 deployment migration started.', $sink);
+    $freshDatabases = [];
     foreach ($targets as $target) {
-        sms2MigrateOneDatabase($target, $options, $sink);
+        $targetOptions = $options;
+        if ($targetOptions['fresh']) {
+            $databaseKey = strtolower($target['host'] . ':' . $target['port'] . '/' . $target['database']);
+            if (isset($freshDatabases[$databaseKey])) {
+                $targetOptions['fresh'] = false;
+                $targetOptions['force'] = false;
+            } else {
+                $freshDatabases[$databaseKey] = true;
+            }
+        }
+        sms2MigrateOneDatabase($target, $targetOptions, $sink);
     }
     sms2MigrateOut('', $sink);
     sms2MigrateOut('Migration complete.', $sink);

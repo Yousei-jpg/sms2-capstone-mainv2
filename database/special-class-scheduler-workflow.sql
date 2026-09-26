@@ -52,9 +52,6 @@ CREATE TABLE IF NOT EXISTS special_class_students (
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_special_student_user
         FOREIGN KEY (student_user_id) REFERENCES users (id)
-        ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT fk_special_student_prereg
-        FOREIGN KEY (pre_registration_id) REFERENCES enr_pre_registrations (id)
         ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

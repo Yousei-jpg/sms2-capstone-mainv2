@@ -46,6 +46,15 @@ function spcHistory(PDO $pdo, int $id, string $action, ?string $from, ?string $t
     $stmt = $pdo->prepare('INSERT INTO special_class_history (special_class_id,action,from_status,to_status,detail,actor_user_id) VALUES (?,?,?,?,?,?)');
     $stmt->execute([$id,$action,$from,$to,mb_substr($detail,0,500),spcActorId()]);
 }
+function spcTableExists(PDO $pdo, string $table): bool {
+    try {
+        $stmt = $pdo->prepare('SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?');
+        $stmt->execute([$table]);
+        return (bool)$stmt->fetchColumn();
+    } catch (Throwable $e) {
+        return false;
+    }
+}
 
 function spcStudents(PDO $pdo): array {
     $students = [];
@@ -57,6 +66,9 @@ function spcStudents(PDO $pdo): array {
             'eligibility_status'=>$r['status']==='active'?'Not Configured':'Not Eligible',
             'eligibility_note'=>$r['status']==='active'?'No enrollment eligibility rule is configured for this student record.':'Student account is not active.'
         ];
+    }
+    if (!spcTableExists($pdo,'enr_pre_registrations') || !spcTableExists($pdo,'enr_applicant_profiles')) {
+        return array_values($students);
     }
     $sql = "SELECT pr.id,pr.student_ref,pr.program_ref,pr.year_level_claimed,pr.status,
                    COALESCE(NULLIF(TRIM(CONCAT_WS(' ',ap.first_name,ap.middle_name,ap.last_name)),''),
@@ -79,7 +91,7 @@ function spcStudents(PDO $pdo): array {
 function spcStudentEligibility(PDO $pdo, array $students, int $subjectId): array {
     if ($subjectId<=0 || !$students) return $students;
     $stmt=$pdo->prepare('SELECT code FROM subjects WHERE id=?'); $stmt->execute([$subjectId]); $code=(string)($stmt->fetchColumn()?:'');
-    if ($code==='') return $students;
+    if ($code==='' || !spcTableExists($pdo,'enr_pre_registration_subjects')) return $students;
     $check=$pdo->prepare("SELECT prereq_status FROM enr_pre_registration_subjects WHERE pre_reg_id=? AND (subject_ref=? OR subject_code_snapshot=?) LIMIT 1");
     foreach ($students as &$s) {
         if (empty($s['pre_registration_id'])) continue;
