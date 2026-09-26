@@ -332,6 +332,20 @@ function sms2RunMigrations(array $options = []): array
         ],
     ];
 
+    if (sms2_env('SMS2_SEED_DEMO') === '1') {
+        $targets[] = [
+            'label' => 'Class Schedule demo data',
+            'migration_key' => '2026_09_27_demo_scheduling_seed',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/demo-scheduling-seed.sql',
+        ];
+    }
+
     $connection = strtolower((string) sms2_env_first(['SMS2_DB_CONNECTION', 'DB_CONNECTION'], 'mysql'));
     if (!in_array($connection, ['mysql', 'mariadb'], true)) {
         throw new RuntimeException(
