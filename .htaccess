@@ -1,5 +1,13 @@
 Options -Indexes
 
+# Dev tooling, installers and seeders must never be reachable from the web.
+<If "%{REQUEST_URI} =~ m#(^|/)(tools|scripts|tests|\.github|\.cursor)(/|$)|/modules/[^/]+/database(/|$)|/generate_modules\.php$#">
+    Require all denied
+</If>
+<FilesMatch "(^Dockerfile$|\.(sql|md|ps1|bat|py|cjs|sh|yml|yaml|log|txt|infinityfree)$)">
+    Require all denied
+</FilesMatch>
+
 RewriteEngine On
 
 # Never rewrite static assets (prevents redirect loops on CSS/JS/images)
