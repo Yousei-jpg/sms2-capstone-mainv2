@@ -53,6 +53,33 @@ if (!function_exists('sms2_env_first')) {
     }
 }
 
+if (!function_exists('sms2_schema_checked')) {
+    /**
+     * Whether a schema check already passed for a database. On a remote database each
+     * CREATE/ALTER/SHOW costs a network round trip, so checks that ran on every page are
+     * recorded once in storage/cache (empty in each new container, so every deploy checks
+     * again). Give a check a new name when its SQL changes.
+     */
+    function sms2_schema_checked(string $check, string $database): bool
+    {
+        return is_file(sms2_schema_marker($check, $database));
+    }
+
+    function sms2_schema_mark_checked(string $check, string $database): void
+    {
+        $marker = sms2_schema_marker($check, $database);
+        if (!is_dir(dirname($marker))) {
+            @mkdir(dirname($marker), 0775, true);
+        }
+        @touch($marker);
+    }
+
+    function sms2_schema_marker(string $check, string $database): string
+    {
+        return ROOT_PATH . '/storage/cache/schema-' . $check . '-' . md5($database);
+    }
+}
+
 if (!function_exists('sms2_detect_base_url')) {
     function sms2_detect_base_url(): string
     {

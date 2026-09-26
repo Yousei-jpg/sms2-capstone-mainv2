@@ -207,6 +207,12 @@ function smsAllowedModuleKeysForRole(string $roleKey): array
 {
     $roleKey = smsNormalizeRoleKey($roleKey);
 
+    // The sidebar and access checks ask for the same role many times per request.
+    static $cache = [];
+    if (isset($cache[$roleKey])) {
+        return $cache[$roleKey];
+    }
+
     $allowed = [];
 
     $pdo = db();
@@ -267,6 +273,7 @@ function smsAllowedModuleKeysForRole(string $roleKey): array
         ));
     }
 
+    $cache[$roleKey] = $allowed;
     return $allowed;
 }
 
@@ -1506,6 +1513,9 @@ function smsEnsureUserPresenceColumn(): void
         return;
     }
     $done = true;
+    if (sms2_schema_checked('users-last-seen', smsDatabaseKey())) {
+        return;
+    }
 
     $pdo = db();
     if (!$pdo) {
@@ -1520,6 +1530,7 @@ function smsEnsureUserPresenceColumn(): void
                  ADD KEY idx_users_last_seen (last_seen_at)'
             );
         }
+        sms2_schema_mark_checked('users-last-seen', smsDatabaseKey());
     } catch (Throwable $e) {
         // Column may already exist under race — ignore
     }

@@ -81,7 +81,8 @@ if ($navRoleKey === 'student') {
 }
 
 $navMessageCount = count($navMessages);
-$navNotifications = array_merge(smsNotificationPayloadForCurrentUser(), $navNotifications);
+// Notifications load after the page from api/notifications.php (see refreshNotifications below):
+// they query the CRAD tables, which would otherwise hold up every page on a remote database.
 $navNotificationCount = count($navNotifications);
 $navNotificationUnreadCount = count(array_filter($navNotifications, static fn(array $item): bool => !empty($item['is_unread'])));
 ?>
@@ -441,8 +442,17 @@ document.addEventListener('DOMContentLoaded', function () {
         }).catch(function () {});
     });
 
+    // One request at a time, and none while the tab is hidden: each poll queries the database.
+    const pollNotifications = function () {
+        window.setTimeout(async function () {
+            if (!document.hidden) {
+                await refreshNotifications();
+            }
+            pollNotifications();
+        }, 15000);
+    };
     refreshNotifications();
-    window.setInterval(refreshNotifications, 5000);
+    pollNotifications();
 
     const logoutLink = document.querySelector('[data-logout-confirm]');
     const modalEl = document.getElementById('logoutConfirmModal');

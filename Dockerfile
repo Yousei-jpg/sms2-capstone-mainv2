@@ -13,7 +13,7 @@ COPY . /var/www/html/
 
 WORKDIR /var/www/html/
 
-RUN mkdir -p storage/keys storage/uploads storage/backups \
+RUN mkdir -p storage/keys storage/uploads storage/backups storage/cache \
     && chown -R www-data:www-data storage
 
 RUN test -f /var/www/html/index.php \

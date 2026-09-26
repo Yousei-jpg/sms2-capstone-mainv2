@@ -14,6 +14,9 @@ storage/backups/*
 storage/uploads/*
 !storage/uploads/.htaccess
 
+# Schema check markers (see sms2_schema_checked in config/config.php)
+storage/cache/
+
 # Accidental nested duplicate copy
 sms2_system/
 

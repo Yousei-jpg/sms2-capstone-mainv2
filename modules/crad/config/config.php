@@ -102,6 +102,30 @@ function cradDb(): ?PDO
     }
 }
 
+/**
+ * Identifies the CRAD database for sms2_schema_checked().
+ */
+function cradDatabaseKey(): string
+{
+    return CRAD_DB_HOST . ':' . CRAD_DB_PORT . '/' . CRAD_DB_NAME;
+}
+
+/**
+ * Whether a CRAD table exists. A table that was found is remembered, so checks that
+ * run on every page skip the query afterwards.
+ */
+function cradTableExists(PDO $pdo, string $table): bool
+{
+    if (sms2_schema_checked('crad-table-' . $table, cradDatabaseKey())) {
+        return true;
+    }
+    if (!$pdo->query('SHOW TABLES LIKE ' . $pdo->quote($table))->fetchColumn()) {
+        return false;
+    }
+    sms2_schema_mark_checked('crad-table-' . $table, cradDatabaseKey());
+    return true;
+}
+
 function cradValidTitleApprovalWhereSql(string $alias = 't'): string
 {
     return "{$alias}.status = 'Approved'
@@ -215,7 +239,7 @@ function cradCleanupPreoralEvaluationsForInvalidRegistry(PDO $pdo, ?array $group
     }
 
     foreach (['preoral_defense_evaluations', 'research_groups'] as $tbl) {
-        if (!$pdo->query("SHOW TABLES LIKE " . $pdo->quote($tbl))->fetchColumn()) {
+        if (!cradTableExists($pdo, $tbl)) {
             return ['ok' => true, 'deleted' => 0, 'message' => 'Pre-oral evaluation cleanup skipped; table ' . $tbl . ' is missing.'];
         }
     }
@@ -264,10 +288,13 @@ function cradEnsurePanelNotificationDeleteTrigger(PDO $pdo): void
         return;
     }
     $checked = true;
+    if (sms2_schema_checked('crad-panel-notification-trigger', cradDatabaseKey())) {
+        return;
+    }
 
     try {
-        if (!$pdo->query("SHOW TABLES LIKE 'research_groups'")->fetchColumn()
-            || !$pdo->query("SHOW TABLES LIKE 'panel_assignment_notifications'")->fetchColumn()) {
+        if (!cradTableExists($pdo, 'research_groups')
+            || !cradTableExists($pdo, 'panel_assignment_notifications')) {
             return;
         }
 
@@ -279,19 +306,18 @@ function cradEnsurePanelNotificationDeleteTrigger(PDO $pdo): void
             LIMIT 1
         ");
         $stmt->execute();
-        if ($stmt->fetchColumn()) {
-            return;
+        if (!$stmt->fetchColumn()) {
+            $pdo->exec("
+                CREATE TRIGGER trg_research_groups_panel_notifications_after_delete
+                AFTER DELETE ON research_groups
+                FOR EACH ROW
+                BEGIN
+                    DELETE FROM panel_assignment_notifications
+                    WHERE research_group_id = OLD.id;
+                END
+            ");
         }
-
-        $pdo->exec("
-            CREATE TRIGGER trg_research_groups_panel_notifications_after_delete
-            AFTER DELETE ON research_groups
-            FOR EACH ROW
-            BEGIN
-                DELETE FROM panel_assignment_notifications
-                WHERE research_group_id = OLD.id;
-            END
-        ");
+        sms2_schema_mark_checked('crad-panel-notification-trigger', cradDatabaseKey());
     } catch (Throwable $e) {
         error_log('Panel notification delete trigger ensure failed: ' . $e->getMessage());
     }

@@ -10,6 +10,12 @@ require_once __DIR__ . '/crypto.php';
 
 function smsEnsureAuthenticatorTable(): void
 {
+    static $done = false;
+    if ($done || sms2_schema_checked('authenticator-table', smsDatabaseKey())) {
+        $done = true;
+        return;
+    }
+
     $pdo = db();
     if (!$pdo) {
         return;
@@ -34,6 +40,9 @@ function smsEnsureAuthenticatorTable(): void
     } catch (Throwable $e) {
         // Ignore if already widened / no permission
     }
+
+    $done = true;
+    sms2_schema_mark_checked('authenticator-table', smsDatabaseKey());
 }
 
 function smsTotpBase32Encode(string $data): string

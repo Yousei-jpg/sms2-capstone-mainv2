@@ -14,6 +14,12 @@ require_once __DIR__ . '/icons.php';
  */
 function smsEnsureSecurityTables(): void
 {
+    static $done = false;
+    if ($done || sms2_schema_checked('security-tables', smsDatabaseKey())) {
+        $done = true;
+        return;
+    }
+
     $pdo = db();
     if (!$pdo) {
         return;
@@ -92,6 +98,9 @@ function smsEnsureSecurityTables(): void
         require_once __DIR__ . '/totp.php';
         smsEnsureAuthenticatorTable();
     }
+
+    $done = true;
+    sms2_schema_mark_checked('security-tables', smsDatabaseKey());
 }
 
 /**

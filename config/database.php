@@ -77,3 +77,11 @@ function db(): ?PDO
         return null;
     }
 }
+
+/**
+ * Identifies the main database for sms2_schema_checked().
+ */
+function smsDatabaseKey(): string
+{
+    return DB_HOST . ':' . DB_PORT . '/' . DB_NAME;
+}

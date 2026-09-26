@@ -135,9 +135,14 @@ function smsSetting(string $key, string $default = ''): string
     }
 
     try {
-        $stmt = $pdo->prepare('SELECT setting_value FROM system_settings WHERE setting_key = ? LIMIT 1');
-        $stmt->execute([$key]);
-        $row = $stmt->fetch();
+        // Pages read several settings per request, so load them all with one query.
+        if (!isset($GLOBALS['__sms_settings_rows']) || !is_array($GLOBALS['__sms_settings_rows'])) {
+            $GLOBALS['__sms_settings_rows'] = $pdo->query('SELECT setting_key, setting_value FROM system_settings')
+                ->fetchAll(PDO::FETCH_KEY_PAIR);
+        }
+        $row = array_key_exists($key, $GLOBALS['__sms_settings_rows'])
+            ? ['setting_value' => $GLOBALS['__sms_settings_rows'][$key]]
+            : false;
         $raw = $row ? (string) $row['setting_value'] : $default;
         if ($row) {
             require_once __DIR__ . '/crypto.php';

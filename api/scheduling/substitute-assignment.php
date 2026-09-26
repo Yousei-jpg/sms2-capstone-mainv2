@@ -19,17 +19,19 @@ function saTime(?string $v):?string{return$v?substr($v,0,5):null;}
 function saUserId():?int{return function_exists('getCurrentUserId')?getCurrentUserId():null;}
 function saQualificationConfigured(PDO $pdo):bool{return(int)$pdo->query("SELECT COUNT(*) FROM teacher_subject_qualifications WHERE status='Active'")->fetchColumn()>0;}
 function saAvailabilityConfigured(PDO $pdo):bool{return(int)$pdo->query("SELECT COUNT(*) FROM teacher_availability")->fetchColumn()>0;}
-function saClass(PDO $pdo,int $id,bool $lock=false):?array{
-    $sql="SELECT se.id,se.section_id,se.subject_id,se.teacher_id original_teacher_id,se.room_id,se.time_block_id,
+const SA_CLASS_SQL="SELECT se.id,se.section_id,se.subject_id,se.teacher_id original_teacher_id,se.room_id,se.time_block_id,
                  se.day_of_week,se.start_time,se.end_time,se.class_type,se.status,se.academic_year,se.semester,
                  sec.code section_code,sec.program,sec.current_students,sub.code subject_code,sub.name subject_name,
                  sub.units,t.employee_no original_employee_no,t.full_name original_teacher,t.department original_department,
                  r.room_code
           FROM schedule_entries se JOIN sections sec ON sec.id=se.section_id JOIN subjects sub ON sub.id=se.subject_id
-          JOIN teachers t ON t.id=se.teacher_id LEFT JOIN rooms r ON r.id=se.room_id WHERE se.id=:id LIMIT 1".($lock?' FOR UPDATE':'');
-    $st=$pdo->prepare($sql);$st->execute(['id'=>$id]);$r=$st->fetch(PDO::FETCH_ASSOC);if(!$r)return null;
+          JOIN teachers t ON t.id=se.teacher_id LEFT JOIN rooms r ON r.id=se.room_id";
+function saClassRow(array $r):array{
     foreach(['id','section_id','subject_id','original_teacher_id','room_id','time_block_id','current_students'] as $k)$r[$k]=$r[$k]===null?null:(int)$r[$k];
     $r['units']=(float)$r['units'];$r['start_time']=saTime($r['start_time']);$r['end_time']=saTime($r['end_time']);return$r;
+}
+function saClass(PDO $pdo,int $id,bool $lock=false):?array{
+    $st=$pdo->prepare(SA_CLASS_SQL." WHERE se.id=:id LIMIT 1".($lock?' FOR UPDATE':''));$st->execute(['id'=>$id]);$r=$st->fetch(PDO::FETCH_ASSOC);return$r?saClassRow($r):null;
 }
 function saAssignmentRows(PDO $pdo,array $f=[]):array{
     $sql="SELECT sa.*,se.day_of_week,se.start_time,se.end_time,se.class_type,se.status class_status,
@@ -56,7 +58,10 @@ function saClasses(PDO $pdo,array $f=[]):array{
     if(!empty($f['section'])){$sql.=" AND sec.code=:section";$p['section']=$f['section'];}
     if(!empty($f['faculty'])){$sql.=" AND t.full_name LIKE :faculty";$p['faculty']='%'.$f['faculty'].'%';}
     if(!empty($f['search'])){$sql.=" AND (sub.code LIKE :search OR sub.name LIKE :search OR sec.code LIKE :search OR t.full_name LIKE :search)";$p['search']='%'.$f['search'].'%';}
-    $sql.=" ORDER BY sec.code,sub.code LIMIT 250";$st=$pdo->prepare($sql);$st->execute($p);$out=[];foreach($st->fetchAll(PDO::FETCH_COLUMN) as $id){$c=saClass($pdo,(int)$id);if($c)$out[]=$c;}return$out;
+    $sql.=" ORDER BY sec.code,sub.code LIMIT 250";$st=$pdo->prepare($sql);$st->execute($p);$ids=array_map('intval',$st->fetchAll(PDO::FETCH_COLUMN));if(!$ids)return[];
+    // One query for every listed class instead of one per class (each round trip is slow on a remote database).
+    $st=$pdo->prepare(SA_CLASS_SQL.' WHERE se.id IN ('.implode(',',array_fill(0,count($ids),'?')).')');$st->execute($ids);$byId=[];foreach($st->fetchAll(PDO::FETCH_ASSOC) as $r)$byId[(int)$r['id']]=saClassRow($r);
+    $out=[];foreach($ids as $id)if(isset($byId[$id]))$out[]=$byId[$id];return$out;
 }
 function saTeacherLoad(PDO $pdo,int $teacherId,?string $ay,?string $sem):float{
     $st=$pdo->prepare("SELECT COALESCE(SUM(sub.units),0) FROM schedule_entries se JOIN subjects sub ON sub.id=se.subject_id

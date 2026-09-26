@@ -66,10 +66,10 @@ function raFacilityMap(PDO $pdo): array {
 function raRoomRows(PDO $pdo): array {
     return $pdo->query("SELECT id, room_code, building, room_type, capacity, status FROM rooms ORDER BY room_code")->fetchAll(PDO::FETCH_ASSOC);
 }
-function raRequest(PDO $pdo,string $type,int $id,bool $lock=false): ?array {
-    $suffix=$lock?' FOR UPDATE':'';
+// SELECT for one request type, ending in its id column so callers can add "=:id" or "IN (...)".
+function raRequestSql(string $type): string {
     if($type==='Regular'){
-        $sql="SELECT se.id, 'Regular' source_type, 'Regular Class' schedule_type, se.status,
+        return "SELECT se.id, 'Regular' source_type, 'Regular Class' schedule_type, se.status,
                     se.academic_year, se.semester, NULL schedule_date, se.day_of_week,
                     se.start_time, se.end_time, se.time_block_id, se.class_type,
                     se.room_id, r.room_code, sec.code section_code, sec.current_students participant_count,
@@ -77,9 +77,9 @@ function raRequest(PDO $pdo,string $type,int $id,bool $lock=false): ?array {
                     CONCAT(sub.code,' · ',sub.name) title
              FROM schedule_entries se JOIN sections sec ON sec.id=se.section_id
              JOIN subjects sub ON sub.id=se.subject_id LEFT JOIN teachers t ON t.id=se.teacher_id
-             LEFT JOIN rooms r ON r.id=se.room_id WHERE se.id=:id LIMIT 1".$suffix;
+             LEFT JOIN rooms r ON r.id=se.room_id WHERE se.id";
     }elseif($type==='Special'){
-        $sql="SELECT sc.id, 'Special' source_type, CONCAT(sc.special_type,' Special Class') schedule_type, sc.status,
+        return "SELECT sc.id, 'Special' source_type, CONCAT(sc.special_type,' Special Class') schedule_type, sc.status,
                     sc.academic_year, sc.semester, sc.class_date schedule_date,
                     DAYNAME(sc.class_date) day_of_week, sc.start_time, sc.end_time, sc.time_block_id,
                     NULL class_type, sc.room_id, r.room_code, COALESCE(sec.code,'Selected Students') section_code,
@@ -88,9 +88,9 @@ function raRequest(PDO $pdo,string $type,int $id,bool $lock=false): ?array {
                     sub.code subject_code, sub.name subject_name, t.full_name faculty_name, sc.title
              FROM special_classes sc LEFT JOIN sections sec ON sec.id=sc.section_id
              LEFT JOIN subjects sub ON sub.id=sc.subject_id LEFT JOIN teachers t ON t.id=sc.teacher_id
-             LEFT JOIN rooms r ON r.id=sc.room_id WHERE sc.id=:id LIMIT 1".$suffix;
+             LEFT JOIN rooms r ON r.id=sc.room_id WHERE sc.id";
     }else{
-        $sql="SELECT ex.id, 'Exam' source_type, CONCAT(ex.exam_type,' Exam') schedule_type, ex.status,
+        return "SELECT ex.id, 'Exam' source_type, CONCAT(ex.exam_type,' Exam') schedule_type, ex.status,
                     ex.academic_year, ex.semester, ex.exam_date schedule_date,
                     DAYNAME(ex.exam_date) day_of_week, ex.start_time, ex.end_time, NULL time_block_id,
                     'Exam' class_type, ex.room_id, r.room_code, sec.code section_code,
@@ -98,14 +98,18 @@ function raRequest(PDO $pdo,string $type,int $id,bool $lock=false): ?array {
                     t.full_name faculty_name, CONCAT(sub.code,' · ',ex.exam_type,' Exam') title
              FROM exam_schedules ex JOIN sections sec ON sec.id=ex.section_id
              JOIN subjects sub ON sub.id=ex.subject_id LEFT JOIN teachers t ON t.id=ex.proctor_id
-             LEFT JOIN rooms r ON r.id=ex.room_id WHERE ex.id=:id LIMIT 1".$suffix;
+             LEFT JOIN rooms r ON r.id=ex.room_id WHERE ex.id";
     }
-    $stmt=$pdo->prepare($sql);$stmt->execute(['id'=>$id]);$row=$stmt->fetch(PDO::FETCH_ASSOC);
-    if(!$row)return null;
+}
+function raRequestRow(array $row): array {
     $row['id']=(int)$row['id'];$row['participant_count']=(int)$row['participant_count'];
     $row['room_id']=$row['room_id']!==null?(int)$row['room_id']:null;
     $row['start_time']=raShortTime($row['start_time']);$row['end_time']=raShortTime($row['end_time']);
     return $row;
+}
+function raRequest(PDO $pdo,string $type,int $id,bool $lock=false): ?array {
+    $stmt=$pdo->prepare(raRequestSql($type).'=:id LIMIT 1'.($lock?' FOR UPDATE':''));$stmt->execute(['id'=>$id]);$row=$stmt->fetch(PDO::FETCH_ASSOC);
+    return $row?raRequestRow($row):null;
 }
 function raRequests(PDO $pdo,array $filters=[]): array {
     $rows=[];
@@ -114,14 +118,21 @@ function raRequests(PDO $pdo,array $filters=[]): array {
         "SELECT id,'Special' source_type FROM special_classes WHERE status IN ('Draft','For Scheduling','Scheduled','Validated','Ready to Publish')",
         "SELECT id,'Exam' source_type FROM exam_schedules WHERE status IN ('Draft','Validated') AND start_time IS NOT NULL AND end_time IS NOT NULL"
     ];
-    foreach($queries as $sql)foreach($pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC) as $key){
-        $r=raRequest($pdo,$key['source_type'],(int)$key['id']);if(!$r)continue;
-        if(!empty($filters['academic_year'])&&$r['academic_year']!==$filters['academic_year'])continue;
-        if(!empty($filters['semester'])&&$r['semester']!==$filters['semester'])continue;
-        if(!empty($filters['source_type'])&&$r['source_type']!==$filters['source_type'])continue;
-        $q=strtolower(trim((string)($filters['search']??'')));
-        if($q!==''&&!str_contains(strtolower(implode(' ',[$r['title'],$r['section_code'],$r['faculty_name'],$r['room_code']])), $q))continue;
-        $rows[]=$r;
+    foreach($queries as $sql){
+        $keys=$pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);if(!$keys)continue;
+        // One query per source type instead of one per request (each round trip is slow on a remote database).
+        $ids=array_map(fn($k)=>(int)$k['id'],$keys);$byId=[];
+        $st=$pdo->prepare(raRequestSql($keys[0]['source_type']).' IN ('.implode(',',array_fill(0,count($ids),'?')).')');$st->execute($ids);
+        foreach($st->fetchAll(PDO::FETCH_ASSOC) as $row)$byId[(int)$row['id']]=raRequestRow($row);
+        foreach($ids as $id){
+            $r=$byId[$id]??null;if(!$r)continue;
+            if(!empty($filters['academic_year'])&&$r['academic_year']!==$filters['academic_year'])continue;
+            if(!empty($filters['semester'])&&$r['semester']!==$filters['semester'])continue;
+            if(!empty($filters['source_type'])&&$r['source_type']!==$filters['source_type'])continue;
+            $q=strtolower(trim((string)($filters['search']??'')));
+            if($q!==''&&!str_contains(strtolower(implode(' ',[$r['title'],$r['section_code'],$r['faculty_name'],$r['room_code']])), $q))continue;
+            $rows[]=$r;
+        }
     }
     usort($rows,fn($a,$b)=>$b['id']<=>$a['id']);
     return $rows;

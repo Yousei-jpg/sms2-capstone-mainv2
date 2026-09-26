@@ -20,6 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     smsMarkCurrentUserSyntheticNotificationRead((string) ($_POST['batch_key'] ?? ''));
 }
 
+// Building the list only reads the session. Release its lock first, so pages the user opens
+// meanwhile do not wait for this poll's database queries.
+session_write_close();
+
 $items = smsNotificationPayloadForCurrentUser();
 echo json_encode([
     'ok' => true,
