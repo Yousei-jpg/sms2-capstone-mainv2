@@ -6,6 +6,7 @@ RUN apt-get update \
         libonig-dev \
     && docker-php-ext-install curl mbstring mysqli pdo pdo_mysql \
     && a2enmod headers rewrite \
+    && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /var/www/html/
