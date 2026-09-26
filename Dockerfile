@@ -25,7 +25,7 @@ ENV PORT=8000
 ENV SMS2_SEED_DEMO=1
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=300s --retries=3 \
     CMD php -r 'exit(@file_get_contents("http://127.0.0.1:" . (getenv("PORT") ?: "8000") . "/up.php") === false ? 1 : 0);'
 
 CMD ["sh", "-c", "if [ \"${SMS2_RUN_MIGRATIONS:-0}\" = \"1\" ]; then php /var/www/html/database/migrate.php; fi; sed -i \"s/^Listen .*/Listen ${PORT:-8000}/\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:[0-9]*>/<VirtualHost *:${PORT:-8000}>/\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]

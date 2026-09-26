@@ -175,9 +175,11 @@ function sms2MigrateWasRecorded(PDO $pdo, string $migrationKey): bool
     return (bool) $stmt->fetchColumn();
 }
 
-function sms2MigrateRecord(PDO $pdo, string $migrationKey, string $sourceFile): void
+function sms2MigrateRecord(PDO $pdo, string $migrationKey, string $sourceFile, bool $ensureTable = true): void
 {
-    sms2MigrateEnsureTrackingTable($pdo);
+    if ($ensureTable) {
+        sms2MigrateEnsureTrackingTable($pdo);
+    }
 
     $stmt = $pdo->prepare(
         'INSERT INTO `schema_migrations` (`migration_key`, `source_file`, `source_sha256`)
@@ -243,8 +245,26 @@ function sms2MigrateOneDatabase(array $target, array $options, ?callable $sink =
         }
     }
 
-    $applied = sms2MigrateApplySqlFile($pdo, $target['sql_file']);
-    sms2MigrateRecord($pdo, $target['migration_key'], $target['sql_file']);
+    if (!empty($target['atomic'])) {
+        // Data-only files run in one transaction with their record, so a container that is
+        // stopped half way leaves no rows behind for the next start to insert twice.
+        // The tracking table is created first because DDL would commit the transaction.
+        sms2MigrateEnsureTrackingTable($pdo);
+        $pdo->beginTransaction();
+        try {
+            $applied = sms2MigrateApplySqlFile($pdo, $target['sql_file']);
+            sms2MigrateRecord($pdo, $target['migration_key'], $target['sql_file'], false);
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    } else {
+        $applied = sms2MigrateApplySqlFile($pdo, $target['sql_file']);
+        sms2MigrateRecord($pdo, $target['migration_key'], $target['sql_file']);
+    }
 
     sms2MigrateOut('Applied ' . $applied . ' SQL statement(s).', $sink);
 }
@@ -367,6 +387,7 @@ function sms2RunMigrations(array $options = []): array
             'pass' => DB_PASS,
             'charset' => DB_CHARSET,
             'sql_file' => __DIR__ . '/demo-scheduling-seed.sql',
+            'atomic' => true,
         ];
         $targets[] = [
             'label' => 'Class Schedule demo data (histories and cloning)',
@@ -378,6 +399,7 @@ function sms2RunMigrations(array $options = []): array
             'pass' => DB_PASS,
             'charset' => DB_CHARSET,
             'sql_file' => __DIR__ . '/demo-scheduling-seed-extra.sql',
+            'atomic' => true,
         ];
     }
 
