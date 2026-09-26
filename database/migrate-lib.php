@@ -319,17 +319,41 @@ function sms2RunMigrations(array $options = []): array
             'charset' => DB_CHARSET,
             'sql_file' => __DIR__ . '/calendar-integration-workflow.sql',
         ],
-        [
-            'label' => 'CRAD module database',
-            'migration_key' => '2026_08_28_crad_db_dump',
-            'host' => CRAD_DB_HOST,
-            'port' => CRAD_DB_PORT,
-            'database' => CRAD_DB_NAME,
-            'user' => CRAD_DB_USER,
-            'pass' => CRAD_DB_PASS,
-            'charset' => CRAD_DB_CHARSET,
-            'sql_file' => dirname(__DIR__) . '/modules/crad/database/crad_db.sql',
-        ],
+    ];
+
+    // Workflow files add tables and columns the Class Schedule pages need (cloning,
+    // substitute history, notifications). Every statement in them is idempotent.
+    foreach ([
+        'conflict-checker-workflow' => 'Conflict checker workflow',
+        'exam-timetable-workflow' => 'Exam timetable workflow',
+        'special-class-scheduler-workflow' => 'Special class scheduler workflow',
+        'teacher-schedule-mapping' => 'Teacher schedule mapping',
+        'substitute-assignment-workflow' => 'Substitute assignment workflow',
+        'schedule-cloning-workflow' => 'Schedule cloning workflow',
+    ] as $file => $label) {
+        $targets[] = [
+            'label' => 'SMS2 ' . strtolower($label),
+            'migration_key' => '2026_09_27_sms2_' . str_replace('-', '_', $file),
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/' . $file . '.sql',
+        ];
+    }
+
+    $targets[] = [
+        'label' => 'CRAD module database',
+        'migration_key' => '2026_08_28_crad_db_dump',
+        'host' => CRAD_DB_HOST,
+        'port' => CRAD_DB_PORT,
+        'database' => CRAD_DB_NAME,
+        'user' => CRAD_DB_USER,
+        'pass' => CRAD_DB_PASS,
+        'charset' => CRAD_DB_CHARSET,
+        'sql_file' => dirname(__DIR__) . '/modules/crad/database/crad_db.sql',
     ];
 
     if (sms2_env('SMS2_SEED_DEMO') === '1') {
@@ -343,6 +367,17 @@ function sms2RunMigrations(array $options = []): array
             'pass' => DB_PASS,
             'charset' => DB_CHARSET,
             'sql_file' => __DIR__ . '/demo-scheduling-seed.sql',
+        ];
+        $targets[] = [
+            'label' => 'Class Schedule demo data (histories and cloning)',
+            'migration_key' => '2026_09_27_demo_scheduling_seed_extra',
+            'host' => DB_HOST,
+            'port' => DB_PORT,
+            'database' => DB_NAME,
+            'user' => DB_USER,
+            'pass' => DB_PASS,
+            'charset' => DB_CHARSET,
+            'sql_file' => __DIR__ . '/demo-scheduling-seed-extra.sql',
         ];
     }
 
