@@ -7,13 +7,15 @@ RUN apt-get update \
     && docker-php-ext-install curl mbstring mysqli pdo pdo_mysql \
     && a2enmod headers rewrite \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && printf 'log_errors=On\nerror_log=/var/www/html/storage/logs/php-error.log\n' > "$PHP_INI_DIR/conf.d/zz-sms2-logging.ini" \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /var/www/html/
 
 WORKDIR /var/www/html/
 
-RUN mkdir -p storage/keys storage/uploads storage/backups \
+RUN mkdir -p storage/keys storage/uploads storage/backups storage/logs \
+    && touch storage/logs/php-error.log \
     && chown -R www-data:www-data storage
 
 RUN test -f /var/www/html/index.php \
