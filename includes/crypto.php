@@ -22,6 +22,17 @@ function smsCryptoAppKey(): string
         return $key;
     }
 
+    // Containers lose storage/keys on every redeploy, so hosts must pin the key here.
+    $envKey = getenv('SMS2_APP_KEY');
+    if (is_string($envKey) && $envKey !== '') {
+        $decoded = base64_decode(trim($envKey), true);
+        if (is_string($decoded) && strlen($decoded) === 32) {
+            $key = $decoded;
+            return $key;
+        }
+        error_log('SMS2: SMS2_APP_KEY must be base64 of 32 bytes; falling back to storage/keys/app.key');
+    }
+
     $path = smsCryptoKeyPath();
     $dir = dirname($path);
     if (!is_dir($dir)) {
